@@ -28,7 +28,6 @@ from merlin.systems.dag.ops import compute_dims  # noqa
 from merlin.systems.triton.export import (  # noqa
     _convert_string2pytorch_dtype,
     export_hugectr_ensemble,
-    export_pytorch_ensemble,
     export_tensorflow_ensemble,
     generate_hugectr_model,
     generate_nvtabular_model,

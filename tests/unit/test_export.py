@@ -31,10 +31,9 @@ ensemble = pytest.importorskip("merlin.systems.triton.export")
 torch = pytest.importorskip("torch")  # noqa
 
 
-from merlin.systems.triton.export import export_pytorch_ensemble, export_tensorflow_ensemble  # noqa
+from merlin.systems.triton.export import export_tensorflow_ensemble  # noqa
 from merlin.systems.triton.utils import run_ensemble_on_tritonserver  # noqa
 from tests.unit.systems.utils.tf import create_tf_model  # noqa
-from tests.unit.systems.utils.torch import create_pytorch_model  # noqa
 
 TRITON_SERVER_PATH = find_executable("tritonserver")
 tf_utils.configure_tensorflow()
@@ -42,8 +41,7 @@ tf_utils.configure_tensorflow()
 
 @pytest.mark.skipif(not TRITON_SERVER_PATH, reason="triton server not found")
 @pytest.mark.parametrize("engine", ["parquet"])
-@pytest.mark.parametrize("output_model", ["tensorflow"])
-def test_export_run_ensemble_triton(tmpdir, engine, output_model, df):
+def test_export_run_ensemble_triton(tmpdir, engine, df):
     conts = ["x", "y", "id"] >> ops.FillMissing() >> ops.Normalize()
     cats = ["name-cat", "name-string"] >> ops.Categorify(cat_cache="host")
     workflow = Workflow(conts + cats)
@@ -53,19 +51,8 @@ def test_export_run_ensemble_triton(tmpdir, engine, output_model, df):
     embed_shapes = get_embedding_sizes(workflow)
     cat_cols = list(embed_shapes.keys())
 
-    if output_model == "tensorflow":
-        tf_model = create_tf_model(cat_cols, [], embed_shapes)
-        export_tensorflow_ensemble(tf_model, workflow, "test_name", tmpdir, [])
-    elif output_model == "pytorch":
-        torch_model = create_pytorch_model(cat_cols, [], embed_shapes)
-        export_pytorch_ensemble(
-            torch_model,
-            workflow,
-            {},
-            "test_name",
-            tmpdir,
-            [],
-        )
+    tf_model = create_tf_model(cat_cols, [], embed_shapes)
+    export_tensorflow_ensemble(tf_model, workflow, "test_name", tmpdir, [])
 
     # assert os.path.exists(os.path.join(repo, "config.pbtxt"))
     tri_df = df.iloc[:10]
