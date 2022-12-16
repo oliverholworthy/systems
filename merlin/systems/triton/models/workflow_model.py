@@ -33,7 +33,6 @@ import nvtabular
 from merlin.core.dispatch import is_list_dtype
 from merlin.systems.triton import _convert_tensor
 from merlin.systems.workflow.hugectr import HugeCTRWorkflowRunner
-from merlin.systems.workflow.pytorch import PyTorchWorkflowRunner
 from merlin.systems.workflow.tensorflow import TensorflowWorkflowRunner
 
 
@@ -88,8 +87,6 @@ class TritonPythonModel:
 
         if model_framework == "hugectr":
             runner_class = HugeCTRWorkflowRunner
-        elif model_framework == "pytorch":
-            runner_class = PyTorchWorkflowRunner
         else:
             runner_class = TensorflowWorkflowRunner
 
