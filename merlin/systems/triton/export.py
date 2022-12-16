@@ -352,17 +352,6 @@ def _generate_nvtabular_config(
         config.output.append(
             model_config.ModelOutput(name="ROWINDEX", data_type=model_config.TYPE_INT32, dims=[-1])
         )
-    elif output_model == "pytorch":
-        for col_name, col_schema in workflow.input_schema.column_schemas.items():
-            _add_model_param(col_schema, model_config.ModelInput, config.input)
-
-        for col_name, col_schema in workflow.output_schema.column_schemas.items():
-            _add_model_param(
-                col_schema,
-                model_config.ModelOutput,
-                config.output,
-                [-1, 1],
-            )
     else:
         for col_name, col_schema in workflow.input_schema.column_schemas.items():
             _add_model_param(col_schema, model_config.ModelInput, config.input)
@@ -430,30 +419,6 @@ def export_tensorflow_model(model, name, output_path, version=1):
                 name=col.name.split("/")[0],
                 data_type=_convert_dtype(col.dtype),
                 dims=[-1, col.shape[1]],
-            )
-        )
-
-    with open(os.path.join(output_path, "config.pbtxt"), "w", encoding="utf-8") as o:
-        text_format.PrintMessage(config, o)
-    return config
-
-
-
-
-def _generate_pytorch_config(model, name, output_path, max_batch_size=None):
-    """given a workflow generates the trton modelconfig proto object describing the inputs
-    and outputs to that workflow"""
-    config = model_config.ModelConfig(name=name, backend="python", max_batch_size=max_batch_size)
-
-    for col in model.inputs:
-        config.input.append(
-            model_config.ModelInput(name=col.name, data_type=_convert_dtype(col.dtype), dims=[-1])
-        )
-
-    for col in model.outputs:
-        config.output.append(
-            model_config.ModelOutput(
-                name=col.name.split("/")[0], data_type=_convert_dtype(col.dtype), dims=[-1]
             )
         )
 
@@ -583,61 +548,6 @@ def _convert_dtype(dtype):
         return dtypes[dtype_name]
     else:
         raise ValueError(f"Can't convert {dtype} to a Triton dtype")
-
-
-def _convert_pytorch_dtype(dtype):
-    """converts a dtype to the appropriate triton proto type"""
-
-    import torch
-
-    dtypes = {
-        torch.float64: model_config.TYPE_FP64,
-        torch.float32: model_config.TYPE_FP32,
-        torch.float16: model_config.TYPE_FP16,
-        torch.int64: model_config.TYPE_INT64,
-        torch.int32: model_config.TYPE_INT32,
-        torch.int16: model_config.TYPE_INT16,
-        torch.int8: model_config.TYPE_INT8,
-        torch.uint8: model_config.TYPE_UINT8,
-        torch.bool: model_config.TYPE_BOOL,
-    }
-
-    if is_string_dtype(dtype):
-        return model_config.TYPE_STRING
-    elif dtype in dtypes:
-        return dtypes[dtype]
-    else:
-        raise ValueError(f"Can't convert dtype {dtype})")
-
-
-def _convert_string2pytorch_dtype(dtype):
-    """converts a dtype to the appropriate torch type"""
-
-    import torch
-
-    if not isinstance(dtype, str):
-        dtype_name = dtype.name
-    else:
-        dtype_name = dtype
-
-    dtypes = {
-        "TYPE_FP64": torch.float64,
-        "TYPE_FP32": torch.float32,
-        "TYPE_FP16": torch.float16,
-        "TYPE_INT64": torch.int64,
-        "TYPE_INT32": torch.int32,
-        "TYPE_INT16": torch.int16,
-        "TYPE_INT8": torch.int8,
-        "TYPE_UINT8": torch.uint8,
-        "TYPE_BOOL": torch.bool,
-    }
-
-    if is_string_dtype(dtype):
-        return model_config.TYPE_STRING
-    elif dtype_name in dtypes:
-        return dtypes[dtype_name]
-    else:
-        raise ValueError(f"Can't convert dtype {dtype})")
 
 
 def _triton_datatype_to_dtype(data_type):

@@ -26,7 +26,6 @@ from tritonclient.utils import np_to_triton_dtype  # noqa
 from merlin.core.dispatch import is_string_dtype, make_df  # noqa
 from merlin.systems.dag.ops import compute_dims  # noqa
 from merlin.systems.triton.export import (  # noqa
-    _convert_string2pytorch_dtype,
     export_hugectr_ensemble,
     export_tensorflow_ensemble,
     generate_hugectr_model,
